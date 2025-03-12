@@ -1,0 +1,42 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "bamboogle",
+  "dataset_size": 10747,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/chiayewken/bamboogle@5787baaae24a33baee4cf57a4cc743e8a02cd548/data/test-00000-of-00001-fd9def31e0acf72c.parquet": {
+      "num_bytes": 8383,
+      "checksum": null
+    }
+  },
+  "download_size": 8383,
+  "features": {
+    "Question": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "Answer": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 19130,
+  "splits": {
+    "test": {
+      "name": "test",
+      "num_bytes": 10747,
+      "num_examples": 125,
+      "dataset_name": "bamboogle"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

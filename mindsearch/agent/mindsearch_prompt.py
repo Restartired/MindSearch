@@ -311,12 +311,16 @@ graph.node("Large Model API Providers"), graph.node("sub_name_2"), ...
 ```<|action_end|>
 """
 
+FINAL_RESPONSE_CN = '''根据得到的信息，用最短的答案进行回答，如果找不到绝对准确的信息，就回答最有可能的答案。'''
+
+'''
 FINAL_RESPONSE_CN = """基于提供的问答对，撰写一篇详细完备的最终回答。
 - 回答内容需要逻辑清晰，层次分明，确保读者易于理解。
 - 回答中每个关键点需标注引用的搜索结果来源(保持跟问答对中的索引一致)，以确保信息的可信度。给出索引的形式为`[[int]]`，如果有多个索引，则用多个[[]]表示，如`[[id_1]][[id_2]]`。
 - 回答部分需要全面且完备，不要出现"基于上述内容"等模糊表达，最终呈现的回答不包括提供给你的问答对。
 - 语言风格需要专业、严谨，避免口语化表达。
 - 保持统一的语法和词汇使用，确保整体文档的一致性和连贯性。"""
+'''
 
 FINAL_RESPONSE_EN = """Based on the provided Q&A pairs, write a detailed and comprehensive final response.
 - The response content should be logically clear and well-structured to ensure reader understanding.

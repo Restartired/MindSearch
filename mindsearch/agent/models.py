@@ -9,6 +9,9 @@ from lagent.llms import (
     LMDeployServer,
 )
 
+
+load_dotenv()
+
 internlm_server = dict(
     type=LMDeployServer,
     path="internlm/internlm2_5-7b-chat",
