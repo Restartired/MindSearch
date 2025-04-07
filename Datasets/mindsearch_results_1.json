@@ -1,6 +1,10 @@
 [
     {
         "query": "Who was president of the United States in the year that Citibank was founded?",
-        "response": "## What year was Citibank founded?\n\nCitibank，即花旗银行，成立于1812年[[1]]。这一信息在多个来源中都有明确记载，包括其官方网站和其他金融历史资料。因此，可以确认Citibank的成立年份为1812年。\n\n## Who was the President of the United States in 2021?\n\n{}"
+        "response": "## In what year was Citibank founded?\n\nCitibank, originally known as City Bank of New York, was founded on June 16, 1812 [[1]][[2]][[3]]. This information is corroborated by multiple sources that detail the bank's history and its establishment in New York City [[4]].\n\nGiven this founding date, we can now determine the president of the United States during that year. The president of the United States in 1812 was James Madison."
+    },
+    {
+        "query": "What rocket was the first spacecraft that ever approached Uranus launched on?",
+        "response": "## What is the name of the first spacecraft that approached Uranus?\n\nThe first spacecraft to approach Uranus was NASA's Voyager 2. This mission, launched on August 20, 1977, was part of the Voyager program and aimed primarily at exploring Jupiter and Saturn. However, due to a rare planetary alignment that occurs once every 175 years, Voyager 2 was able to extend its trajectory to include encounters with Uranus and Neptune [[1]][[2]][[3]].\n\nVoyager 2 made its closest approach to Uranus on January 24, 1986. During this encounter, the spacecraft came within approximately 50,600 miles (81,500 kilometers) of the planet's cloud tops [[1]][[2]]. This close encounter provided valuable data about Uranus' atmosphere, rings, and moons [[4]].\n\nIn summary, NASA's Voyager 2 is the name of the first spacecraft that approached Uranus in January 1986."
     }
 ]

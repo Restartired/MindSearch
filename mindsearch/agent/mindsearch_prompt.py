@@ -171,13 +171,18 @@ def node(self, node_name: str) -> str
 1. 注意，每个搜索节点的内容必须单个问题，不要包含多个问题(比如同时问多个知识点的问题或者多个事物的比较加筛选，类似 A, B, C 有什么区别,那个价格在哪个区间 -> 分别查询)
 2. 不要杜撰搜索结果，要等待代码返回结果
 3. 同样的问题不要重复提问，可以在已有问题的基础上继续提问
-4. 添加 response 节点的时候，要单独添加，不要和其他节点一起添加，不能同时添加 response 节点和其他节点
-5. 一次输出中，不要包含多个代码块，每次只能有一个代码块
-6. 每个代码块应该放置在一个代码块标记中，同时生成完代码后添加一个<|action_end|>标志，如下所示：
+4. root 节点就是问题本身，如果不能拆分成子问题，就直接执行 root 节点的搜索。
+5. 每个节点必须先通过 `add_node` 添加到图中，然后才能通过 `add_edge` 连接和通过 `node` 查看。
+6. 在生成代码时，确保 `add_node` 的调用先于 `add_edge` 和 `node`。
+7. 在调用 `add_edge` 时，确保 `start_node` 和 `end_node` 都是已经添加到图中的节点。
+8. 在调用 `node` 时，确保节点名称是已经添加到图中的节点。
+9. 添加 response 节点的时候，要单独添加，不要和其他节点一起添加，不能同时添加 response 节点和其他节点
+10. 一次输出中，不要包含多个代码块，每次只能有一个代码块
+11. 每个代码块应该放置在一个代码块标记中，同时生成完代码后添加一个<|action_end|>标志，如下所示：
     <|action_start|><|interpreter|>```python
     # 你的代码块
     ```<|action_end|>
-7. 最后一次回复应该是添加node_name为'response'的 response 节点，必须添加 response 节点，不要添加其他节点
+12. 最后一次回复应该是添加node_name为'response'的 response 节点，必须添加 response 节点，不要添加其他节点
 """
 
 GRAPH_PROMPT_EN = """## Character Profile
@@ -264,14 +269,19 @@ By breaking down a question into sub-questions that can be answered through sear
 1. Each search node's content must be a single question; do not include multiple questions (e.g., do not ask multiple knowledge points or compare and filter multiple things simultaneously, like asking for differences between A, B, and C, or price ranges -> query each separately).
 2. Do not fabricate search results; wait for the code to return results.
 3. Do not repeat the same question; continue asking based on existing questions.
-4. When adding a response node, add it separately; do not add a response node and other nodes simultaneously.
-5. In a single output, do not include multiple code blocks; only one code block per output.
-6. Each code block should be placed within a code block marker, and after generating the code, add an <|action_end|> tag as shown below:
+4. The root node is the question itself. If it cannot be broken down into sub-questions, directly execute the search for the root node.
+5. Each node must first be added to the graph using `add_node`, and then it can be connected using `add_edge` and viewed using `node`.
+6. When generating code, ensure that the call to `add_node` precedes `add_edge` and `node`.
+7. When calling `add_edge`, ensure that both `start_node` and `end_node` are nodes that have already been added to the graph.
+8. When calling `node`, ensure that the node name is one that has already been added to the graph.
+9. When adding a response node, add it separately; do not add a response node and other nodes simultaneously.
+10. In a single output, do not include multiple code blocks; only one code block per output.
+11. Each code block should be placed within a code block marker, and after generating the code, add an <|action_end|> tag as shown below:
     <|action_start|><|interpreter|>
     ```python
     # Your code block (Note that the 'Get new added node information' logic must be added at the end of the code block, such as 'graph.node('...')')
     ```<|action_end|>
-7. The final response should add a response node with node_name 'response', and no other nodes should be added.
+12. The final response should add a response node with node_name 'response', and no other nodes should be added.
 """
 
 graph_fewshot_example_cn = """

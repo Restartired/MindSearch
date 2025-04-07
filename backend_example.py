@@ -48,6 +48,6 @@ def get_response(query):
 
 # Example usage
 if __name__ == "__main__":
-    #query = "What is the weather like today in New York?"
-    query = '王者荣耀这个赛季什么射手最强？'
+    query = "Who was president of the United States in the year that Citibank was founded?"
+    # query = '王者荣耀这个赛季什么射手最强？'
     get_response(query)

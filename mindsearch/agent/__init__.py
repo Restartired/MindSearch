@@ -66,17 +66,13 @@ def init_agent(lang="cn",
             plugins=plugins,
             template=date,
             output_format=PluginParser(
-                template=searcher_system_prompt_cn
-                if lang == "cn" else searcher_system_prompt_en,
+                template=searcher_system_prompt_cn if lang == "cn" else searcher_system_prompt_en,
                 tool_info=get_plugin_prompt(plugins),
             ),
-            user_input_template=(searcher_input_template_cn if lang == "cn"
-                                 else searcher_input_template_en),
-            user_context_template=(searcher_context_template_cn if lang == "cn"
-                                   else searcher_context_template_en),
+            user_input_template=(searcher_input_template_cn if lang == "cn" else searcher_input_template_en),
+            user_context_template=(searcher_context_template_cn if lang == "cn" else searcher_context_template_en),
         ),
-        summary_prompt=FINAL_RESPONSE_CN
-        if lang == "cn" else FINAL_RESPONSE_EN,
+        summary_prompt=FINAL_RESPONSE_CN if lang == "cn" else FINAL_RESPONSE_EN,
         max_turn=10,
     )
     return agent

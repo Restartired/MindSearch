@@ -217,6 +217,8 @@ class WebSearchGraph:
         self.adjacency_list = defaultdict(list)
 
     def node(self, node_name: str) -> str:
+        if node_name not in self.nodes:
+            raise KeyError(f"Node '{node_name}' does not exist in the graph. Available nodes: {list(self.nodes.keys())}")
         return self.nodes[node_name].copy()
 
     @classmethod
@@ -249,6 +251,7 @@ class ExecutionAction(BaseAction):
     """Tool used by MindSearch planner to execute graph node query."""
 
     def run(self, command, local_dict, global_dict, stream_graph=False):
+        print(f"Executing command: {command}")  # 调试信息
         def extract_code(text: str) -> str:
             text = re.sub(r"from ([\w.]+) import WebSearchGraph", "", text)
             triple_match = re.search(r"```[^\n]*\n(.+?)```", text, re.DOTALL)

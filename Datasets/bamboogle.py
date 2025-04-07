@@ -10,7 +10,7 @@ ds = load_dataset("chiayewken/bamboogle")
 test_dataset = ds['test']
 
 # 提取 'Question' 和 'Answer' 特征
-questions = test_dataset['Question'][:1]
+questions = test_dataset['Question'][:2]
 #questions = test_dataset['Question']
 answers = test_dataset['Answer']
 
@@ -21,16 +21,24 @@ headers = {"Content-Type": "application/json"}
 # 函数：发送查询并获取响应
 def get_response(query):
     data = {"inputs": query}
-    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=20)
+    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=20, stream=True)
     #return response.json()
 
     for chunk in response.iter_lines(chunk_size=8192, decode_unicode=False, delimiter=b"\n"):
         if chunk:
             decoded = chunk.decode("utf-8")
-            if decoded.strip() == "" or decoded.startswith(": ping - "):
-                continue  # 跳过空行或心跳检测行
+            # if decoded.strip() == "" or decoded.startswith(": ping - "):
+            #     continue  # 跳过空行或心跳检测行
+            # if decoded[:6] == "data: ":
+            #     decoded = decoded[6:]
+
+            if decoded == "\r":
+                continue
             if decoded[:6] == "data: ":
                 decoded = decoded[6:]
+            elif decoded.startswith(": ping - "):
+                continue
+
             try:
                 response_data = json.loads(decoded)
                 print(f"Raw JSON response: {response_data}")  # 打印原始 JSON 数据
