@@ -38,15 +38,33 @@ def streaming(raw_response):
             elif decoded.startswith(": ping - "):
                 continue
             response = json.loads(decoded)
-            yield (
-                response["current_node"],
-                (
-                    response["response"]["formatted"]["node"][response["current_node"]]["response"]
-                    if response["current_node"]
-                    else response["response"]
-                ),
-                response["response"]["formatted"]["adjacency_list"],
-            )
+            try:
+                response = json.loads(decoded)
+                # yield (
+                #     response["current_node"],
+                #     (
+                #         response["response"]["formatted"]["node"][response["current_node"]]["response"]
+                #         if response["current_node"]
+                #         else response["response"]
+                #     ),
+                #     response["response"]["formatted"]["adjacency_list"],
+                # )
+
+                # 安全获取 response，默认为空字典
+                response_data = response.get("response", {})
+                formatted_data = response_data.get("formatted", {})
+                current_node = response.get("current_node", None)
+                adjacency_list = formatted_data.get("adjacency_list", {})
+                node_response = (
+                    formatted_data.get("node", {}).get(current_node, {}).get("response")
+                    if current_node
+                    else response_data
+                )
+                yield current_node, node_response, adjacency_list
+
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON: {e}")
+                print(f"Invalid JSON data: {decoded}")
 
 
 # Initialize Streamlit session state

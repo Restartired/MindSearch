@@ -121,7 +121,7 @@ def process_query(query, url="http://localhost:8002/solve"):
 
 def main():
     # 示例查询
-    query = "When did the war that Neil Armstrong served in end?"
+    query = "The most populous national capital city was established in what year?"
     results = []
 
     responses, graph_html, nodes, adjacency_list = process_query(query)

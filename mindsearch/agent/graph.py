@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from threading import Thread
 from typing import Dict, List
+from difflib import get_close_matches
 
 from lagent.actions import BaseAction
 from lagent.schema import AgentMessage, AgentStatusCode
@@ -217,8 +218,24 @@ class WebSearchGraph:
         self.adjacency_list = defaultdict(list)
 
     def node(self, node_name: str) -> str:
+        # if node_name not in self.nodes:
+        #     raise KeyError(f"Node '{node_name}' does not exist in the graph. Available nodes: {list(self.nodes.keys())}")
+        
         if node_name not in self.nodes:
-            raise KeyError(f"Node '{node_name}' does not exist in the graph. Available nodes: {list(self.nodes.keys())}")
+            # 尝试通过模糊匹配找到最接近的节点名称
+            closest_matches = get_close_matches(node_name, self.nodes.keys(), n=1, cutoff=0.8)
+            if closest_matches:
+                corrected_name = closest_matches[0]
+                print(f"Node '{node_name}' not found. Did you mean '{corrected_name}'?")
+                # node_name = corrected_name
+                print(f"return node('{corrected_name}')")
+                return self.nodes[corrected_name].copy()
+            else:
+                raise KeyError(
+                    f"Node '{node_name}' does not exist in the graph. "
+                    f"Available nodes: {list(self.nodes.keys())}"
+                )
+
         return self.nodes[node_name].copy()
 
     @classmethod
@@ -251,7 +268,13 @@ class ExecutionAction(BaseAction):
     """Tool used by MindSearch planner to execute graph node query."""
 
     def run(self, command, local_dict, global_dict, stream_graph=False):
+        # 将调试信息输出到文件中
+        # with open("debug_info.txt", "a") as f:
+        #     f.write(f"Command: {command}\n")
+        #     f.write(f"Global Dict: {global_dict}\n")
+        #     f.write(f"Local Dict: {local_dict}\n")
         print(f"Executing command: {command}")  # 调试信息
+
         def extract_code(text: str) -> str:
             text = re.sub(r"from ([\w.]+) import WebSearchGraph", "", text)
             triple_match = re.search(r"```[^\n]*\n(.+?)```", text, re.DOTALL)
@@ -266,7 +289,17 @@ class ExecutionAction(BaseAction):
         exec(command, global_dict, local_dict)
 
         # 匹配所有 graph.node 中的内容
-        node_list = re.findall(r"graph.node\((.*?)\)", command)
+        # node_list = re.findall(r"graph.node\((.*?)\)", command)
+
+        # 由于 LLM 的幻觉问题，导致生成的 graph.node() 里面的节点名称和 add_node() 里面的节点名称不一致，导致 keyerror
+        # 因此需要从 graph.add_node() 中提取节点名称
+        node_list = re.findall(r"graph.add_node\(\s*node_name\s*=\s*\"([^\"]+)\"", command)
+
+        # #将 command 和 node_list 输出到文件中
+        # with open("debug_info.txt", "a") as f:
+        #     f.write(f"Command: {command}\n")
+        #     f.write(f"Node List: {node_list}\n")
+
         graph: WebSearchGraph = local_dict["graph"]
         while graph.n_active_tasks:
             while not graph.searcher_resp_queue.empty():
