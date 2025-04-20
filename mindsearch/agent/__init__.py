@@ -43,6 +43,11 @@ def init_agent(lang="cn",
         llm = create_object(llm_cfg)
         LLM.setdefault(model_format, {}).setdefault(mode, llm)
 
+    # 添加调试信息
+    # if llm is None:
+    #     raise RuntimeError("Failed to initialize LLM.")
+    # print(f"LLM initialized: {llm}")
+
     date = datetime.now().strftime("The current date is %Y-%m-%d.")
     plugins = [(dict(
         type=AsyncWebBrowser if use_async else WebBrowser,
@@ -75,4 +80,7 @@ def init_agent(lang="cn",
         summary_prompt=FINAL_RESPONSE_CN if lang == "cn" else FINAL_RESPONSE_EN,
         max_turn=10,
     )
+
+    # 添加调试信息
+    # print(f"Agent initialized: {agent}")
     return agent

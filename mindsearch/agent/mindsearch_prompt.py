@@ -287,7 +287,7 @@ By breaking down a question into sub-questions that can be answered through sear
 graph_fewshot_example_cn = """
 ## 返回格式示例
 <|action_start|><|interpreter|>```python
-graph = WebSearchGraph()
+graph = WebSearchGraph() # 必须先初始化graph为WebSearchGraph类
 graph.add_root_node(node_content="哪家大模型API最便宜?", node_name="root") # 添加原始问题作为根节点
 graph.add_node(
         node_name="大模型API提供商", # 节点名称最好有意义
@@ -305,7 +305,7 @@ graph.node("大模型API提供商"), graph.node("sub_name_2"), ...
 graph_fewshot_example_en = """
 ## Response Format
 <|action_start|><|interpreter|>```python
-graph = WebSearchGraph()
+graph = WebSearchGraph() # Must initialize graph as WebSearchGraph class first
 graph.add_root_node(node_content="Which large model API is the cheapest?", node_name="root") # Add the original question as the root node
 graph.add_node(
         node_name="Large Model API Providers", # The node name should be meaningful
@@ -323,18 +323,39 @@ graph.node("Large Model API Providers"), graph.node("sub_name_2"), ...
 
 FINAL_RESPONSE_CN = '''根据得到的信息，用最短的答案进行回答，如果找不到绝对准确的信息，就回答最有可能的答案。'''
 
-'''
-FINAL_RESPONSE_CN = """基于提供的问答对，撰写一篇详细完备的最终回答。
-- 回答内容需要逻辑清晰，层次分明，确保读者易于理解。
-- 回答中每个关键点需标注引用的搜索结果来源(保持跟问答对中的索引一致)，以确保信息的可信度。给出索引的形式为`[[int]]`，如果有多个索引，则用多个[[]]表示，如`[[id_1]][[id_2]]`。
-- 回答部分需要全面且完备，不要出现"基于上述内容"等模糊表达，最终呈现的回答不包括提供给你的问答对。
-- 语言风格需要专业、严谨，避免口语化表达。
-- 保持统一的语法和词汇使用，确保整体文档的一致性和连贯性。"""
-'''
+# FINAL_RESPONSE_CN = """基于提供的问答对，撰写一篇详细完备的最终回答。
+# - 回答内容需要逻辑清晰，层次分明，确保读者易于理解。
+# - 回答中每个关键点需标注引用的搜索结果来源(保持跟问答对中的索引一致)，以确保信息的可信度。给出索引的形式为`[[int]]`，如果有多个索引，则用多个[[]]表示，如`[[id_1]][[id_2]]`。
+# - 回答部分需要全面且完备，不要出现"基于上述内容"等模糊表达，最终呈现的回答不包括提供给你的问答对。
+# - 语言风格需要专业、严谨，避免口语化表达。
+# - 保持统一的语法和词汇使用，确保整体文档的一致性和连贯性。"""
 
-FINAL_RESPONSE_EN = """Based on the provided Q&A pairs, write a detailed and comprehensive final response.
-- The response content should be logically clear and well-structured to ensure reader understanding.
-- Each key point in the response should be marked with the source of the search results (consistent with the indices in the Q&A pairs) to ensure information credibility. The index is in the form of `[[int]]`, and if there are multiple indices, use multiple `[[]]`, such as `[[id_1]][[id_2]]`.
-- The response should be comprehensive and complete, without vague expressions like "based on the above content". The final response should not include the Q&A pairs provided to you.
-- The language style should be professional and rigorous, avoiding colloquial expressions.
-- Maintain consistent grammar and vocabulary usage to ensure overall document consistency and coherence."""
+
+FINAL_RESPONSE_EN = '''Based on the information obtained, provide the answer in the shortest possible way. If an absolutely accurate answer cannot be found, provide the most likely answer.'''
+
+# FINAL_RESPONSE_EN = """Based on the provided Q&A pairs, write a detailed and comprehensive final response.
+# - The response content should be logically clear and well-structured to ensure reader understanding.
+# - Each key point in the response should be marked with the source of the search results (consistent with the indices in the Q&A pairs) to ensure information credibility. The index is in the form of `[[int]]`, and if there are multiple indices, use multiple `[[]]`, such as `[[id_1]][[id_2]]`.
+# - The response should be comprehensive and complete, without vague expressions like "based on the above content". The final response should not include the Q&A pairs provided to you.
+# - The language style should be professional and rigorous, avoiding colloquial expressions.
+# - Maintain consistent grammar and vocabulary usage to ensure overall document consistency and coherence."""
+
+
+REGENERATE_CODE_PROMPT_CN = """## 任务
+以下代码已经生成：{original_code}
+但是发现了以下问题： {errors}
+请根据以上问题修复代码，确保：
+1. WebSearchGraph 在任何操作之前初始化。
+2. 节点在调用 add_edge 或 node 之前使用 add_node 添加。
+3. 解决所有其他问题。
+返回仅修正后的代码。"""
+
+
+REGENERATE_CODE_PROMPT_EN = """## Task
+The following code has been generated:{original_code}
+However, the following issues were found: {errors}
+Please fix the code based on the above issues, ensuring:
+1.The WebSearchGraph is initialized before any operations.
+2.Nodes are added using add_node before calling add_edge or node.
+3.All other issues are resolved.
+Return only the corrected code in a single code block. """

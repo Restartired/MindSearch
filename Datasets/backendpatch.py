@@ -4,19 +4,19 @@ import requests
 from pyvis.network import Network
 from lagent.schema import AgentStatusCode
 
-# from datasets import load_dataset
+from datasets import load_dataset
 
-# # 加载数据集
-# ds = load_dataset("chiayewken/bamboogle")
-# #ds = load_from_disk('./bamboogle')
+# 加载数据集
+ds = load_dataset("chiayewken/bamboogle")
+#ds = load_from_disk('./bamboogle')
 
-# # 访问 'test' 数据集
-# test_dataset = ds['test']
+# 访问 'test' 数据集
+test_dataset = ds['test']
 
-# # 提取 'Question' 和 'Answer' 特征
-# # questions = test_dataset['Question'][2:3]
-# questions = test_dataset['Question']
-# # answers = test_dataset['Answer']
+# 提取 'Question' 和 'Answer' 特征
+# questions = test_dataset['Question'][2:3]
+questions = test_dataset['Question']
+# answers = test_dataset['Answer']
 
 def create_network_graph(nodes, adjacency_list):
     net = Network(height="500px", width="60%", bgcolor="white", font_color="black")
@@ -84,7 +84,9 @@ def process_query(query, url="http://localhost:8002/solve"):
 
     for resp in streaming(raw_response):
         node_name, response, adjacency_list = resp
-        for name in set(adjacency_list) | {val["name"] for vals in adjacency_list.values() for val in vals}:
+        for name in set(adjacency_list) | {
+            val["name"] for vals in adjacency_list.values() for val in vals
+        }:
             if name not in _nodes:
                 _nodes[name] = query if name == "root" else name
             elif response.get("stream_state") == 0:
@@ -120,16 +122,16 @@ def process_query(query, url="http://localhost:8002/solve"):
         
 
 def main():
-    # 示例查询
-    query = "The most populous national capital city was established in what year?"
+    # # 示例查询
+    # query = "What is the length of the second deepest river in the world?"
     results = []
 
-    responses, graph_html, nodes, adjacency_list = process_query(query)
+    # responses, graph_html, nodes, adjacency_list = process_query(query)
 
-    results.append({
-        "query": query,
-        "responses": nodes['response'] if ('response' in nodes) else nodes
-    })
+    # results.append({
+    #     "query": query,
+    #     "responses": nodes['response'] if ('response' in nodes) else nodes
+    # })
 
 
     # with open('/root/repo/MindSearch/Datasets/empty_responses.json', "r", encoding="utf-8") as f:
@@ -137,28 +139,28 @@ def main():
 
 
 
-    # for idx, query in enumerate(questions):
-    #     print(f"Processing query {idx + 1}/{len(questions)}: {query}")
+    for idx, query in enumerate(questions):
+        print(f"Processing query {idx + 1}/{len(questions)}: {query}")
 
-    #     responses, graph_html, nodes, adjacency_list = process_query(query)
-    #     # results.append({
-    #     #     "query": query,
-    #     #     "responses": responses,
-    #     #     "graph_html": graph_html,
-    #     #     "nodes": nodes,
-    #     #     "adjacency_list": adjacency_list
-    #     # })
+        responses, graph_html, nodes, adjacency_list = process_query(query)
+        # results.append({
+        #     "query": query,
+        #     "responses": responses,
+        #     "graph_html": graph_html,
+        #     "nodes": nodes,
+        #     "adjacency_list": adjacency_list
+        # })
 
-    #     results.append({
-    #         "query": query,
-    #         "responses": nodes['response'] if ('response' in nodes) else nodes
-    #     })
+        results.append({
+            "query": query,
+            "responses": nodes['response'] if ('response' in nodes) else nodes
+        })
 
     
     # 保存结果到文件
-    output_file = "mindsearch_results_6.json"
-    with open(output_file, "a", encoding="utf-8") as f:
-        f.write("\n")  # 确保从新的一行开始
+    output_file = "mindsearch_results.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        # f.write("\n")  # 确保从新的一行开始
         json.dump(results, f, ensure_ascii=False, indent=4)
     
     print(f"Batch processing complete. Results saved to {output_file}")

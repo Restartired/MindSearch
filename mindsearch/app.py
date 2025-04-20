@@ -133,6 +133,10 @@ async def run(request: GenerationParams, _request: Request):
         model_format=args.model_format,
         search_engine=args.search_engine,
     )
+
+    # 确保 agent 被正确传递
+    # global_dict = {"agent": agent, "session_id": session_id, "lang": args.lang}
+    # print(f"Global dict: {global_dict}")
     return EventSourceResponse(generate(), ping=300)
 
 
@@ -165,6 +169,9 @@ async def run_async(request: GenerationParams, _request: Request):
         search_engine=args.search_engine,
         use_async=True,
     )
+
+    # 确保 agent 被正确传递
+    # global_dict = {"agent": agent, "session_id": session_id, "lang": args.lang}    
     return EventSourceResponse(generate(), ping=300)
 
 

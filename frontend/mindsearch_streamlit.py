@@ -37,7 +37,6 @@ def streaming(raw_response):
                 decoded = decoded[6:]
             elif decoded.startswith(": ping - "):
                 continue
-            response = json.loads(decoded)
             try:
                 response = json.loads(decoded)
                 # yield (
@@ -114,6 +113,7 @@ def update_chat(query):
                     _nodes[node_name or "response"] = response["formatted"] and response[
                         "formatted"
                     ].get("thought")
+
             if len(_nodes) != _node_cnt or response["stream_state"] == 0:
                 net = create_network_graph(_nodes, adjacency_list)
                 graph_html_path = draw_graph(net)
@@ -122,6 +122,7 @@ def update_chat(query):
                 _node_cnt = len(_nodes)
             else:
                 graph_html = None
+                
             if "graph_placeholder" not in st.session_state:
                 st.session_state["graph_placeholder"] = st.empty()
             if "expander_placeholder" not in st.session_state:

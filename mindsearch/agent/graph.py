@@ -15,6 +15,8 @@ from lagent.schema import AgentMessage, AgentStatusCode
 
 from .streaming import AsyncStreamingAgentForInternLM, StreamingAgentForInternLM
 
+from .code_validation import CodeValidationAgent
+from .mindsearch_prompt import REGENERATE_CODE_PROMPT_EN, REGENERATE_CODE_PROMPT_CN
 
 class SearcherAgent(StreamingAgentForInternLM):
     def __init__(
@@ -266,8 +268,10 @@ class WebSearchGraph:
 
 class ExecutionAction(BaseAction):
     """Tool used by MindSearch planner to execute graph node query."""
+    def __init__(self, agent):
+        self.agent = agent  # 保存 MindSearchAgent 的引用
 
-    def run(self, command, local_dict, global_dict, stream_graph=False):
+    def run(self, command, local_dict, global_dict, is_first_generation=False, nodes_added=None, session_id=0, stream_graph=False):
         # 将调试信息输出到文件中
         # with open("debug_info.txt", "a") as f:
         #     f.write(f"Command: {command}\n")
@@ -286,7 +290,63 @@ class ExecutionAction(BaseAction):
             return text
 
         command = extract_code(command)
-        exec(command, global_dict, local_dict)
+
+        # 通过 self.agent 访问 MindSearchAgent
+        agent = self.agent
+        if agent is None:
+            raise RuntimeError("Agent is not initialized.")
+
+        print(f"Agent: {agent}, Session ID: {session_id}")
+
+        # 初始化 CodeValidationAgent
+        validator = CodeValidationAgent(nodes_added, is_first_generation)
+
+        # 获取当前的 LLM 实例和会话 ID
+        # agent = global_dict.get("agent")
+        # session_id = global_dict.get("session_id", 0)
+        # lang = global_dict.get("lang", "en")  # 获取语言设置，默认为英文
+
+        # 打印agent、session_id和lang
+        # print(f"Agent: {agent}, Session ID: {session_id}, Language: {lang}")
+
+        # if agent is None:
+        #     raise RuntimeError("LLM agent is not initialized.")
+
+        # 循环校验和执行代码
+        max_attempts = 1  # 限制最大尝试次数
+        attempts = 0
+
+        while attempts < max_attempts:
+            attempts += 1
+
+            # 校验代码
+            is_valid, errors = validator.validate_code(command)
+            if not is_valid:
+                # 打印错误信息并提醒 LLM
+                print(f"Code validation failed: {errors}")
+                print("LLM: Please regenerate the code based on the above errors.")
+
+                # 让当前 LLM 实例重新生成代码
+                command = self.regenerate_code(errors, command, agent, session_id, global_dict.get("lang", "en"))
+                continue  # 重新校验新的代码
+
+            # 如果校验通过，执行代码
+            print("Code validation passed. Executing the code...")
+            try:
+                exec(command, global_dict, local_dict)
+                break  # 执行成功，退出循环
+            except Exception as e:
+                # 如果执行过程中出现错误，也反馈给 LLM
+                print(f"Code execution failed: {str(e)}")
+                print("LLM: Please regenerate the code to fix execution errors.")
+                command = self.regenerate_code([str(e)], command, agent, session_id, global_dict.get("lang", "en"))
+                continue  # 重新校验新的代码
+
+        if attempts >= max_attempts:
+            print("Maximum attempts reached. Unable to generate valid code.")
+            raise RuntimeError("Failed to generate valid code after multiple attempts.")
+            
+        # exec(command, global_dict, local_dict)
 
         # 匹配所有 graph.node 中的内容
         # node_list = re.findall(r"graph.node\((.*?)\)", command)
@@ -341,3 +401,65 @@ class ExecutionAction(BaseAction):
                         )
         res = [graph.nodes[node.strip().strip('"').strip("'")] for node in node_list]
         return res, graph.nodes, graph.adjacency_list
+
+    # def regenerate_code(self, errors: List[str], original_code: str, agent, session_id: int, lang: str = "en") -> str:
+    async def regenerate_code(self, errors: List[str], original_code: str, agent, session_id: int, lang: str = "en") -> str:
+        """
+        根据错误信息让当前 LLM 实例重新生成代码。
+        """
+        # 根据语言选择提示词
+        if lang == "en":
+            prompt_template = REGENERATE_CODE_PROMPT_EN
+        else:
+            prompt_template = REGENERATE_CODE_PROMPT_CN
+
+        # 格式化提示词
+        prompt = prompt_template.format(
+            original_code=original_code,
+            errors="\n".join(f"{i + 1}. {error}" for i, error in enumerate(errors))
+        )
+
+        # 调用当前 LLM 实例
+        print(f"Regenerating code with the following prompt:\n{prompt}")
+        # try:
+        #     # 使用当前的 LLM 实例与其对话
+        #     response = agent(
+        #         AgentMessage(
+        #             sender="user",
+        #             content=prompt,
+        #         ),
+        #         session_id=session_id,
+        #     )
+
+        #     if response is None:
+        #         raise RuntimeError("LLM returned None.")
+
+        #     # 获取 LLM 的响应
+        #     for message in response:
+        #         if message.stream_state == AgentStatusCode.END:
+        #             new_code = message.content
+        #             print(f"Generated new code:\n{new_code}")
+        #             return new_code
+
+        #         new_code = message.content
+        #         print(f"Generated new code:\n{new_code}")
+        #         return new_code
+
+        try:
+            # 使用当前的 LLM 实例与其对话
+            async for message in agent(
+                AgentMessage(
+                    sender="user",
+                    content=prompt,
+                ),
+                session_id=session_id,
+            ):
+                if message.stream_state == AgentStatusCode.END:
+                    new_code = message.content
+                    print(f"Generated new code:\n{new_code}")
+                    return new_code
+        except Exception as e:
+            print(f"Error while regenerating code: {e}")
+            return ""
+        
+        return ""

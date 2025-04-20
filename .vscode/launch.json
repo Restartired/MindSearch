@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: MindSearch (Backend)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "mindsearch.app",
+            "args": [
+                "--lang", "en",
+                "--model_format", "internlm_silicon",
+                "--search_engine", "GoogleSearch",
+                "--asy"
+            ],
+            "jinja": true,
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Streamlit (Frontend)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "${workspaceFolder}/frontend/mindsearch_streamlit.py"
+            ],
+            "jinja": true,
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Frontend and Backend",
+            "configurations": ["Python: MindSearch (Backend)", "Python: Streamlit (Frontend)"]
+        }
+    ]
+}

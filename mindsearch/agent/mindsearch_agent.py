@@ -64,13 +64,18 @@ class MindSearchAgent(StreamingAgentForInternLM):
         WebSearchGraph.SEARCHER_CONFIG = searcher_cfg
         super().__init__(finish_condition=finish_condition, max_turn=max_turn, **kwargs)
         self.summary_prompt = summary_prompt
-        self.action = ExecutionAction()
+        self.action = ExecutionAction(agent=self) # 将 self 传递给 ExecutionAction
+
+        self.is_first_generation = True  # 标记是否是第一次生成代码
+        self.nodes_added = set()  # 全局记录已添加的节点
 
     def forward(self, message: AgentMessage, session_id=0, **kwargs):
         if isinstance(message, str):
             message = AgentMessage(sender="user", content=message)
+
         _graph_state = dict(node={}, adjacency_list={}, ref2url={})
         local_dict, global_dict = {}, globals()
+        
         for _ in range(self.max_turn):
             last_agent_state = AgentStatusCode.SESSION_READY
             for message in self.agent(message, session_id=session_id, **kwargs):
@@ -94,17 +99,31 @@ class MindSearchAgent(StreamingAgentForInternLM):
                 message.formatted.update(deepcopy(_graph_state))
                 yield message
                 last_agent_state = message.stream_state
+
             if not message.formatted["tool_type"]:
                 message.stream_state = AgentStatusCode.END
                 yield message
                 return
 
+            # 调用 ExecutionAction 校验并执行代码
             gen = GeneratorWithReturn(
-                self.action.run(message.content, local_dict, global_dict, True)
+                # self.action.run(message.content, local_dict, global_dict, True)
+                self.action.run(
+                    message.content,
+                    local_dict,
+                    global_dict,
+                    self.is_first_generation,
+                    self.nodes_added,
+                    session_id,
+                    True,
+                )
             )
             for graph_exec in gen:
                 graph_exec.formatted["ref2url"] = deepcopy(_graph_state["ref2url"])
                 yield graph_exec
+
+            # 更新 is_first_generation 状态
+            self.is_first_generation = False
 
             reference, references_url = _generate_references_from_graph(gen.ret[1])
             _graph_state.update(node=gen.ret[1], adjacency_list=gen.ret[2], ref2url=references_url)
@@ -138,19 +157,30 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
         finish_condition=lambda m: "add_response_node" in m.content,
         max_turn: int = 10,
         **kwargs,
+        # inputs, session_id=session_id
     ):
         WebSearchGraph.SEARCHER_CONFIG = searcher_cfg
         WebSearchGraph.is_async = True
         WebSearchGraph.start_loop()
         super().__init__(finish_condition=finish_condition, max_turn=max_turn, **kwargs)
         self.summary_prompt = summary_prompt
-        self.action = ExecutionAction()
+        self.action = ExecutionAction(agent=self) # 将 self 传递给 ExecutionAction
 
+        self.is_first_generation = True  # 标记是否是第一次生成代码
+        self.nodes_added = set()  # 全局记录已添加的节点
+
+    # async def forward(self, message: AgentMessage, session_id=0, global_dict=None, **kwargs):
     async def forward(self, message: AgentMessage, session_id=0, **kwargs):
+
         if isinstance(message, str):
             message = AgentMessage(sender="user", content=message)
+
+        # 打印kwargs
+        # print(kwargs)
+
         _graph_state = dict(node={}, adjacency_list={}, ref2url={})
         local_dict, global_dict = {}, globals()
+
         for _ in range(self.max_turn):
             last_agent_state = AgentStatusCode.SESSION_READY
             async for message in self.agent(message, session_id=session_id, **kwargs):
@@ -174,18 +204,32 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
                 message.formatted.update(deepcopy(_graph_state))
                 yield message
                 last_agent_state = message.stream_state
+
             if not message.formatted["tool_type"]:
                 message.stream_state = AgentStatusCode.END
                 yield message
                 return
 
+            # 调用 ExecutionAction 校验并执行代码
             gen = GeneratorWithReturn(
-                self.action.run(message.content, local_dict, global_dict, True)
+                # self.action.run(message.content, local_dict, global_dict, True)
+                self.action.run(
+                    message.content,
+                    local_dict,
+                    global_dict,
+                    self.is_first_generation,
+                    self.nodes_added,
+                    session_id,
+                    True,
+                )
             )
             for graph_exec in gen:
                 graph_exec.formatted["ref2url"] = deepcopy(_graph_state["ref2url"])
                 yield graph_exec
 
+            # 更新 is_first_generation 状态
+            self.is_first_generation = False
+            
             reference, references_url = _generate_references_from_graph(gen.ret[1])
             _graph_state.update(node=gen.ret[1], adjacency_list=gen.ret[2], ref2url=references_url)
             if self.finish_condition(message):
