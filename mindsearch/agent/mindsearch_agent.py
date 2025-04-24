@@ -164,10 +164,11 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
         WebSearchGraph.start_loop()
         super().__init__(finish_condition=finish_condition, max_turn=max_turn, **kwargs)
         self.summary_prompt = summary_prompt
-        self.action = ExecutionAction(agent=self) # 将 self 传递给 ExecutionAction
+        self.action = ExecutionAction()
+        # self.action = ExecutionAction(agent=self) # 将 self 传递给 ExecutionAction
 
-        self.is_first_generation = True  # 标记是否是第一次生成代码
-        self.nodes_added = set()  # 全局记录已添加的节点
+        # self.is_first_generation = True  # 标记是否是第一次生成代码
+        # self.nodes_added = set()  # 全局记录已添加的节点
 
     # async def forward(self, message: AgentMessage, session_id=0, global_dict=None, **kwargs):
     async def forward(self, message: AgentMessage, session_id=0, **kwargs):
@@ -212,16 +213,16 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
 
             # 调用 ExecutionAction 校验并执行代码
             gen = GeneratorWithReturn(
-                # self.action.run(message.content, local_dict, global_dict, True)
-                self.action.run(
-                    message.content,
-                    local_dict,
-                    global_dict,
-                    self.is_first_generation,
-                    self.nodes_added,
-                    session_id,
-                    True,
-                )
+                self.action.run(message.content, local_dict, global_dict, True)
+                # self.action.run(
+                #     message.content,
+                #     local_dict,
+                #     global_dict,
+                #     self.is_first_generation,
+                #     self.nodes_added,
+                #     session_id,
+                #     True,
+                # )
             )
             for graph_exec in gen:
                 graph_exec.formatted["ref2url"] = deepcopy(_graph_state["ref2url"])
