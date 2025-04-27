@@ -75,13 +75,13 @@ class CodeValidationAgent:
                     return keyword.value.value
         return None
 
-    def validate_code(self, code: str):
-        """
-        校验代码，返回校验结果和错误信息。
-        """
-        self.errors = []
-        static_result = self.static_analysis(code)
-        return static_result, self.errors
+    # def validate_code(self, code: str):
+    #     """
+    #     校验代码，返回校验结果和错误信息。
+    #     """
+    #     self.errors = []
+    #     static_result = self.static_analysis(code)
+    #     return static_result, self.errors
 
     # def validate_code(self, code: str):
     #     self.errors = []

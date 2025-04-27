@@ -64,6 +64,7 @@ def init_agent(lang="cn",
     agent = (AsyncMindSearchAgent if use_async else MindSearchAgent)(
         llm=llm,
         template=date,
+        lang=lang,
         output_format=InterpreterParser(
             template=GRAPH_PROMPT_CN if lang == "cn" else GRAPH_PROMPT_EN),
         searcher_cfg=dict(

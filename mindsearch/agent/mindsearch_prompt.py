@@ -347,7 +347,6 @@ REGENERATE_CODE_PROMPT_CN = """## 任务
 请根据以上问题修复代码，确保：
 1. WebSearchGraph 在任何操作之前初始化。
 2. 节点在调用 add_edge 或 node 之前使用 add_node 添加。
-3. 解决所有其他问题。
 返回仅修正后的代码。"""
 
 
@@ -357,5 +356,4 @@ However, the following issues were found: {errors}
 Please fix the code based on the above issues, ensuring:
 1.The WebSearchGraph is initialized before any operations.
 2.Nodes are added using add_node before calling add_edge or node.
-3.All other issues are resolved.
 Return only the corrected code in a single code block. """

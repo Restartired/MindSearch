@@ -268,7 +268,16 @@ def display_chat_history():
                         st.session_state["responses"][-1][-1]
                     )
                 with col2:
-                    selected_node_key = st.session_state["already_used_keys"][-1]
+                    # selected_node_key = st.session_state["already_used_keys"][-1]
+
+                    if "already_used_keys" not in st.session_state:
+                        st.session_state["already_used_keys"] = []
+
+                    if st.session_state["already_used_keys"]:
+                        selected_node_key = st.session_state["already_used_keys"][-1]
+                    else:
+                        selected_node_key = None  # 或者设置一个默认值
+                        
                     st.session_state["selectbox_placeholder"] = st.empty()
                     selected_node = st.session_state["selectbox_placeholder"].selectbox(
                         "Select a node:",
