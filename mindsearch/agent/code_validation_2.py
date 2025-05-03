@@ -24,6 +24,8 @@ class CodeValidationAgent:
         add_node_matches = re.findall(r'graph\.add_node\(\s*node_name\s*=\s*"(.*?)"', command)
         add_edge_matches = re.findall(r'graph\.add_edge\(\s*start_node\s*=\s*"(.*?)",\s*end_node\s*=\s*"(.*?)"\)', command)
         node_matches = re.findall(r'graph\.node\(\s*"(.*?)"\)', command)
+        response_node_matches = re.findall(r'graph\.add_response_node\(\s*node_name\s*=\s*"(.*?)"\)', command)
+
 
         # 如果是第一次生成代码
         if self.is_first_generation:
@@ -39,13 +41,19 @@ class CodeValidationAgent:
                 root_node_name = root_node_added.group(1)
                 self.nodes_added.add(root_node_name)
 
-        # 检查是否有添加节点的操作
-        for node_name in add_node_matches:
-            self.nodes_added.add(node_name)
+        if add_node_matches:
+            # 检查是否有添加节点的操作
+            for node_name in add_node_matches:
+                self.nodes_added.add(node_name)
 
-        # 检查是否有边或查看节点的操作，但没有对应的节点
-        if (add_edge_matches or node_matches) and not add_node_matches:
-            self.errors.append("Error: Edges or node accesses are defined, but no nodes were added.")
+        if response_node_matches:
+            # 检查是否有添加响应节点的操作
+            for node_name in response_node_matches:
+                self.nodes_added.add(node_name)
+
+        # # 检查是否有边或查看节点的操作，但没有对应的节点
+        # if (add_edge_matches or node_matches) and not add_node_matches:
+        #     self.errors.append("Error: Edges or node accesses are defined, but no nodes were added.")
 
         # 检查 add_edge 和 node 的节点名称是否一致
         for start_node, end_node in add_edge_matches:
@@ -64,14 +72,15 @@ class CodeValidationAgent:
                 else:
                     self.errors.append(f"Error: Node '{end_node}' is not defined.")
 
-        for node_name in node_matches:
-            if node_name not in self.nodes_added:
-                corrected_name = self._get_closest_match(node_name)
-                if corrected_name:
-                    self.errors.append(f"Error: Node '{node_name}' not found. Did you mean '{corrected_name}'?")
-                    # command = command.replace(f'"{node_name}"', f'"{corrected_name}"')
-                else:
-                    self.errors.append(f"Error: Node '{node_name}' is not defined.")
+        if node_matches:
+            for node_name in node_matches:
+                if node_name not in self.nodes_added:
+                    corrected_name = self._get_closest_match(node_name)
+                    if corrected_name:
+                        self.errors.append(f"Error: Node '{node_name}' not found. Did you mean '{corrected_name}'?")
+                        # command = command.replace(f'"{node_name}"', f'"{corrected_name}"')
+                    else:
+                        self.errors.append(f"Error: Node '{node_name}' is not defined.")
 
         return len(self.errors) == 0, self.errors
 

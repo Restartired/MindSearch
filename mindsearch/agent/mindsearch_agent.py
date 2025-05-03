@@ -66,10 +66,10 @@ class MindSearchAgent(StreamingAgentForInternLM):
         WebSearchGraph.SEARCHER_CONFIG = searcher_cfg
         super().__init__(finish_condition=finish_condition, max_turn=max_turn, **kwargs)
         self.summary_prompt = summary_prompt
-        self.action = ExecutionAction(agent=self) # 将 self 传递给 ExecutionAction
+        self.action = ExecutionAction()
 
-        self.is_first_generation = True  # 标记是否是第一次生成代码
-        self.nodes_added = set()  # 全局记录已添加的节点
+        # self.is_first_generation = True  # 标记是否是第一次生成代码
+        # self.nodes_added = set()  # 全局记录已添加的节点
 
     def forward(self, message: AgentMessage, session_id=0, **kwargs):
         if isinstance(message, str):
@@ -110,15 +110,6 @@ class MindSearchAgent(StreamingAgentForInternLM):
             # 调用 ExecutionAction 校验并执行代码
             gen = GeneratorWithReturn(
                 self.action.run_sync(message.content, local_dict, global_dict, True)
-                # self.action.run(
-                #     message.content,
-                #     local_dict,
-                #     global_dict,
-                #     self.is_first_generation,
-                #     self.nodes_added,
-                #     session_id,
-                #     True,
-                # )
             )
             for graph_exec in gen:
                 graph_exec.formatted["ref2url"] = deepcopy(_graph_state["ref2url"])
@@ -168,22 +159,16 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
         super().__init__(finish_condition=finish_condition, max_turn=max_turn, **kwargs)
         self.summary_prompt = summary_prompt
         self.action = ExecutionAction()
-        # self.action = ExecutionAction(agent=self) # 将 self 传递给 ExecutionAction
 
         self.is_first_generation = True  # 标记是否是第一次生成代码
         self.nodes_added = set()  # 全局记录已添加的节点
-        # self.action = ExecutionAction(self.is_first_generation, self.nodes_added)
 
         self.lang = lang  # 语言设置
 
-    # async def forward(self, message: AgentMessage, session_id=0, global_dict=None, **kwargs):
     async def forward(self, message: AgentMessage, session_id=0, **kwargs):
 
         if isinstance(message, str):
             message = AgentMessage(sender="user", content=message)
-
-        # 打印kwargs
-        # print(kwargs)
 
         _graph_state = dict(node={}, adjacency_list={}, ref2url={})
         local_dict, global_dict = {}, globals()
@@ -255,14 +240,6 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
 
                     print(f"Regenerating code with the following prompt:\n{prompt}")
 
-                    # message = AgentMessage(
-                    #     sender="CodeValidator",
-                    #     content=prompt,
-                    #     formatted=deepcopy(_graph_state),
-                    #     stream_state=message.stream_state,
-                    # )
-                    # yield message
-
                     # 让 LLM 重新生成代码
                     new_message = AgentMessage(
                         sender="CodeValidator",
@@ -301,15 +278,6 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
             # 调用 ExecutionAction 校验并执行代码
             gen = GeneratorWithReturn(
                 self.action.run_sync(message.content, local_dict, global_dict, True)
-                # self.action.run(
-                #     message.content,
-                #     local_dict,
-                #     global_dict,
-                #     self.is_first_generation,
-                #     self.nodes_added,
-                #     session_id,
-                #     True,
-                # )
             )
             for graph_exec in gen:
                 graph_exec.formatted["ref2url"] = deepcopy(_graph_state["ref2url"])
@@ -340,66 +308,3 @@ class AsyncMindSearchAgent(AsyncStreamingAgentForInternLM):
                 stream_state=message.stream_state + 1,  # plugin or code return
             )
             yield message
-
-
-# def regenerate_code(self, errors: List[str], original_code: str, agent, session_id: int, lang: str = "en") -> str:
-# # async def regenerate_code(self, errors: List[str], original_code: str, agent, session_id: int, lang: str = "en") -> str:
-#     """
-#     根据错误信息让当前 LLM 实例重新生成代码。
-#     """
-#     # 根据语言选择提示词
-#     if lang == "en":
-#         prompt_template = REGENERATE_CODE_PROMPT_EN
-#     else:
-#         prompt_template = REGENERATE_CODE_PROMPT_CN
-
-#     # 格式化提示词
-#     prompt = prompt_template.format(
-#         original_code=original_code,
-#         errors="\n".join(f"{i + 1}. {error}" for i, error in enumerate(errors))
-#     )
-
-#     # 调用当前 LLM 实例
-#     print(f"Regenerating code with the following prompt:\n{prompt}")
-#     # try:
-#     #     # 使用当前的 LLM 实例与其对话
-#     #     response = agent(
-#     #         AgentMessage(
-#     #             sender="user",
-#     #             content=prompt,
-#     #         ),
-#     #         session_id=session_id,
-#     #     )
-
-#     #     if response is None:
-#     #         raise RuntimeError("LLM returned None.")
-
-#     #     # 获取 LLM 的响应
-#     #     for message in response:
-#     #         # if message.stream_state == AgentStatusCode.END:
-#     #         #     new_code = message.content
-#     #         #     print(f"Generated new code:\n{new_code}")
-#     #         #     return new_code
-
-#     #         new_code = message.content
-#     #         print(f"Generated new code:\n{new_code}")
-#     #         return new_code
-
-#     try:
-#         # 使用当前的 LLM 实例与其对话
-#         async for message in agent(
-#             AgentMessage(
-#                 sender="user",
-#                 content=prompt,
-#             ),
-#             session_id=session_id,
-#         ):
-#             if message.stream_state == AgentStatusCode.END:
-#                 new_code = message.content
-#                 print(f"Generated new code:\n{new_code}")
-#                 return new_code
-#     except Exception as e:
-#         print(f"Error while regenerating code: {e}")
-#         return ""
-    
-#     return ""

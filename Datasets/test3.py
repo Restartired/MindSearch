@@ -1,4 +1,7 @@
 from datasets import load_dataset
+# https://pypi.org/project/datasets/
+# https://huggingface.co/datasets/chiayewken/bamboogle
+
 import json
 
 # 加载数据集

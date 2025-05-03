@@ -5,6 +5,8 @@ from pyvis.network import Network
 from lagent.schema import AgentStatusCode
 
 from datasets import load_dataset
+# https://pypi.org/project/datasets/
+# https://huggingface.co/datasets/chiayewken/bamboogle
 
 # 加载数据集
 ds = load_dataset("chiayewken/bamboogle")
